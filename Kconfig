@@ -1,0 +1,46 @@
+#
+# Copyright (c) 2020 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+menu "Citysage Levaware Thunder Settings"
+
+config FIRMWARE_VERSION
+	string "Firmware version: v<yymmdd>.<rev>"
+	default "v000000.00"
+
+config GIT_COMMIT
+	string "First 8 hex characters of the git commit hash used to build binary"
+    default "NO_COMMIT"
+
+config PUBLICATION_INTERVAL_SECONDS
+	int "Interval in seconds that the app will publish data"
+	default 60
+
+config CONNECTION_RETRY_TIMEOUT_SECONDS
+	int "Number of seconds between each AWS IoT connection retry"
+	default 30
+
+config TELEMETRY_PAYLOAD_BUFFER_SIZE
+	int "Telemetry JSON payload buffer size"
+	default 256
+
+config FOTA_LOG_NAME
+	string "Full name of FOTA log"
+	default "fota.json"
+
+config PROD_TEST
+	bool "Build configuration for Production Testing"
+	# default false
+	select AT_HOST_LIBRARY
+	select UART_INTERRUPT_DRIVEN
+
+endmenu
+
+rsource "src/drivers/sensor/bme688/Kconfig"
+# source "C:/ncs/v1.9.0/nrf/lib/at_host/Kconfig" # or manually add env. variable for the path
+
+menu "Zephyr Kernel"
+source "Kconfig.zephyr"
+endmenu

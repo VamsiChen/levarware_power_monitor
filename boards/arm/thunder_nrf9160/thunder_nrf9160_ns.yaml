@@ -1,0 +1,13 @@
+identifier: thunder_nrf9160_ns
+name: Thunder-nRF9160-Non-Secure
+type: mcu
+arch: arm
+toolchain:
+  - gnuarmemb
+  - xtools
+  - zephyr
+ram: 152
+flash: 256
+supported:
+  - i2c
+  - watchdog

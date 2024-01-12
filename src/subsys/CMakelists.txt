@@ -1,0 +1,14 @@
+#
+# Copyright (c) 2021 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+target_include_directories(app PRIVATE .)
+
+target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/led.c)
+target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/filesystem.c)
+target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/cs_json.c)
+target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/modbus_serial.c)
+target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/modem.c)
+target_sources(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/onboard_button.c)

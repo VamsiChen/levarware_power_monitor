@@ -1,0 +1,275 @@
+/*
+ * Copyright (c) 2018-2020 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/ {
+	model = "Thunder nRF9160";
+	compatible = "reliance,thunder-nrf9160";
+
+	chosen {
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,uart-mcumgr = &uart0;
+		nordic,pm-ext-flash = &w25q32jv;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		blue_led: led_0 {
+			gpios = <&gpio0 10 GPIO_ACTIVE_HIGH>;
+			label = "BLUE LED";
+		};
+		green_led: led_1 {
+			gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
+			label = "GREEN LED";
+		};
+		red_led: led_2 {
+			gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;
+			label = "RED LED";
+		};
+	};
+
+	
+	pwr_chrg_int {
+		compatible = "gpio-keys";
+		pwr_chrg: int1 {
+			gpios = <&gpio0 9 GPIO_ACTIVE_LOW>;
+			label = "CHARGER INTERRUPT";
+		};
+	};
+
+	sys_reg_en
+	{
+		compatible = "gpio-leds";
+		max77816_en: reg_en_1 {
+			gpios = <&gpio0 23 GPIO_ACTIVE_HIGH>;
+			label = "MAX77816 ENABLE";
+		};
+	};
+
+	sys_reg_state
+	{
+		compatible = "gpio-keys";
+		max77816_state: reg_status_1 {
+			gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>;
+			label = "MAX77816 STATUS";
+		};	
+	};
+
+
+	buttons {
+		compatible = "gpio-keys";
+		mode_btn: button_0 {
+			gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+			label = "MODE BUTTON";
+		};
+	};
+
+	bma2_int_gpios {
+		compatible = "gpio-keys";
+		bma2_int1: int1 {
+			gpios = <&gpio0 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+			label = "INT1";
+		};
+		bma2_int2: int2 {
+			gpios = <&gpio0 15 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+			label = "INT2";
+		};
+	};
+
+	/* These aliases are provided for compatibility with samples */
+	aliases {
+		led0 = &blue_led;
+		led1 = &green_led;
+		led2 = &red_led;
+		sw0 = &mode_btn;
+		bootloader-led0 = &blue_led;
+		ext-reg-en = &max77816_en;
+		ext-reg-status = &max77816_state;
+	};
+};
+
+&adc {
+	status = "okay";
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+/*used mainly for console, shell, (optional, can use uart1 instead)AT commands*/
+&uart0 {
+	compatible = "nordic,nrf-uarte";
+	status = "okay";
+	label = "UART0";
+	current-speed = <115200>;
+	tx-pin = <27>;
+	rx-pin = <26>;
+};
+
+/*used mainly for external sensors*/
+&uart2 {
+	// compatible = "nordic,nrf-uarte";
+	// label = "UART2";
+	status = "okay";
+	current-speed = <115200>;
+	tx-pin = <25>;
+	rx-pin = <24>;
+
+	modbus_rtu: modbus_rtu {
+		compatible = "zephyr,modbus-serial";
+		label = "MODBUS0";
+	};
+};
+
+/*on-board sensors & utilities*/
+/*Always set the pins to sensor i2c not to the utilities otherwise the sensor driver will fail to initialize after startup*/
+&i2c1 {
+	compatible = "nordic,nrf-twim";
+	label = "I2C1";
+	status = "okay";
+	sda-pin = <1>;
+	scl-pin = <0>;
+	
+	max77816dewp@19 {
+		compatible = "maxim,max77816dewp";
+		label = "MAX77816DEWP";
+		reg = <0x19>;
+	};
+
+	bme688@76 {
+		compatible = "bosch,bme688";
+		label = "BME688";
+		reg = <0x76>;
+	};
+
+	bma253: bma253@18 {
+		compatible = "i2c-device";
+		status = "okay";
+		label = "BMA253";
+		reg = <0x18>;
+	};
+
+	mp2731: mp2731@96 {
+		compatible = "i2c-device";
+		status = "okay";
+		label = "MP2731";
+		reg = <0x4B>;
+	};	
+};
+
+&spi3 {
+	compatible = "nordic,nrf-spim";
+	label = "SPI3";
+	status = "okay";
+	sck-pin = <4>;
+	mosi-pin = <5>;
+	miso-pin = <6>;
+	cs-gpios = 	< &gpio0 7 GPIO_ACTIVE_LOW >,
+				< &gpio0 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP) >;
+	// miso-pull-up;
+	w25q32jv: w25q32jv@0 {
+		compatible = "jedec,spi-nor";
+		label = "W25Q32JV";
+		reg = < 0 >;
+		spi-max-frequency = < 40000000 >;
+		size = < 0x2000000 >;
+		has-dpd;
+		t-enter-dpd = < 3000 >;
+		t-exit-dpd = < 30000 >;
+		jedec-id = [ ef 40 16  ];
+	};
+	sdhc0: sdhc@1 {
+		compatible = "zephyr,mmc-spi-slot";
+		reg = < 1 >;
+		status = "okay";
+		label = "SDHC0";
+		spi-max-frequency = <40000000>;
+	};
+};
+
+&timer0 {
+	status = "okay";
+};
+
+&timer1 {
+	status = "okay";
+};
+
+&timer2 {
+	status = "okay";
+};
+
+&flash0 {
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 0x10000>;
+		};
+		slot0_partition: partition@10000 {
+			label = "image-0";
+		};
+		slot0_ns_partition: partition@40000 {
+			label = "image-0-nonsecure";
+		};
+		slot1_partition: partition@80000 {
+			label = "image-1";
+		};
+		slot1_ns_partition: partition@b0000 {
+			label = "image-1-nonsecure";
+		};
+		scratch_partition: partition@f0000 {
+			label = "image-scratch";
+			reg = <0x000f0000 0xa000>;
+		};
+		storage_partition: partition@fa000 {
+			label = "storage";
+			reg = <0x000fa000 0x00006000>;
+		};
+	};
+};
+
+/ {
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		sram0_s: image_s@20000000 {
+			/* Secure image memory */
+		};
+
+		sram0_modem: image_modem@20010000 {
+			/* Modem (shared) memory */
+		};
+
+		sram0_ns: image_ns@2001A000 {
+			/* Non-Secure image memory */
+		};
+	};
+};
+
+/ { 
+	vbatt {
+		compatible = "voltage-divider";
+		io-channels = <&adc 5>;
+		output-ohms = <100000>;
+		full-ohms = <(100000 + 100000)>;
+		/*power-gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;*/
+	};
+};
+
+
+/* Include partition configuration file */
+#include "thunder_nrf9160_partition_conf.dts"
